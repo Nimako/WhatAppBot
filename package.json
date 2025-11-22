@@ -1,0 +1,30 @@
+{
+  "name": "whatsapp-bot",
+  "version": "1.0.0",
+  "description": "WhatsApp bot for ECG prepaid and postpaid credit purchases using Twilio",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "keywords": [
+    "whatsapp",
+    "bot",
+    "twilio",
+    "ecg"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "twilio": "^4.19.0",
+    "pg": "^8.11.3",
+    "axios": "^1.6.2",
+    "dotenv": "^16.3.1",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}
+
