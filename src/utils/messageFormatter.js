@@ -5,17 +5,29 @@
 class MessageFormatter {
     /**
      * Format main menu message
+     * @param {string} sessionId - Optional session ID to include web URL
      * @returns {string} - Formatted menu message
      */
-    static formatMenu() {
+    static formatMenu(sessionId = null) {
+        const webBaseUrl = process.env.WEB_BASE_URL || 'http://localhost:3000';
+        let option4 = '4️⃣ Open Web Version';
+        
+        if (sessionId) {
+            const webUrl = `${webBaseUrl}/web?session=${sessionId}`;
+            option4 = `4️⃣ Open Web Version : ${webUrl}`;
+        }
+        
         return `*ECG Credit Purchase Bot*
 
 Please select an option:
 1️⃣ Prepaid
 2️⃣ Postpaid
 3️⃣ Charge Status
+${option4}
 
-Reply with the number of your choice.`;
+Reply with the number of your choice.
+
+*Tip:* Type *CANCEL*, *STOP*, *END*, or *QUIT* at any time to cancel and start over.`;
     }
 
     /**
@@ -121,6 +133,37 @@ ${message}`;
         return `❌ Transaction cancelled.
 
 Type *MENU* to return to the main menu.`;
+    }
+
+    /**
+     * Format cancellation message with menu (for session cancellation)
+     * @param {string} sessionId - Session ID for web URL
+     * @returns {string} - Formatted cancellation message with menu
+     */
+    static formatCancellationWithMenu(sessionId = null) {
+        const webBaseUrl = process.env.WEB_BASE_URL || 'http://localhost:3000';
+        let option4 = '4️⃣ Open Web Version';
+        
+        if (sessionId) {
+            const webUrl = `${webBaseUrl}/web?session=${sessionId}`;
+            option4 = `4️⃣ Open Web Version : ${webUrl}`;
+        }
+        
+        return `❌ *Session Cancelled*
+
+Your previous session has been cancelled. Starting fresh:
+
+*ECG Credit Purchase Bot*
+
+Please select an option:
+1️⃣ Prepaid
+2️⃣ Postpaid
+3️⃣ Charge Status
+${option4}
+
+Reply with the number of your choice.
+
+*Tip:* Type *CANCEL*, *STOP*, *END*, or *QUIT* at any time to cancel and start over.`;
     }
 
     /**

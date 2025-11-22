@@ -164,7 +164,7 @@ class DbService {
     /**
      * Clear session data (reset to menu)
      * @param {string} sessionId - Session ID
-     * @returns {Promise<Session>} - Updated session
+     * @returns {Promise<Session|null>} - Updated session or null if not found
      */
     async resetSession(sessionId) {
         this._ensurePool();
@@ -178,12 +178,31 @@ class DbService {
             );
 
             if (result.rows.length === 0) {
-                throw new Error('Session not found');
+                // Session doesn't exist (may have been deleted)
+                return null;
             }
 
             return new Session(result.rows[0]);
         } catch (error) {
             console.error('Error resetting session:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Delete a session completely
+     * @param {string} sessionId - Session ID
+     * @returns {Promise<void>}
+     */
+    async deleteSession(sessionId) {
+        this._ensurePool();
+        try {
+            await this.pool.query(
+                'DELETE FROM user_sessions WHERE id = $1',
+                [sessionId]
+            );
+        } catch (error) {
+            console.error('Error deleting session:', error);
             throw error;
         }
     }

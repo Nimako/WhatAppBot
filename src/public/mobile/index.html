@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>ECG Credit Purchase</title>
+    <link rel="stylesheet" href="/mobile/style.css">
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-top">
+                <button class="back-btn" onclick="goBack()" style="display: none;" id="backBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    </svg>
+                </button>
+                <h1>ECG Credit</h1>
+                <button class="switch-btn" onclick="switchToWeb()" title="Switch to Web Chat">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="app-main" id="appMain">
+            <!-- Welcome Screen / Menu -->
+            <div class="screen active" id="menuScreen">
+                <div class="welcome-card">
+                    <div class="logo">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        </svg>
+                    </div>
+                    <h2>Welcome</h2>
+                    <p>Choose a service to get started</p>
+                </div>
+
+                <div class="menu-options">
+                    <div class="menu-card" onclick="selectOption('1')">
+                        <div class="menu-icon prepaid">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                            </svg>
+                        </div>
+                        <div class="menu-content">
+                            <h3>Prepaid</h3>
+                            <p>Purchase prepaid credit</p>
+                        </div>
+                        <div class="menu-arrow">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 18l6-6-6-6"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="menu-card" onclick="selectOption('2')">
+                        <div class="menu-icon postpaid">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                            </svg>
+                        </div>
+                        <div class="menu-content">
+                            <h3>Postpaid</h3>
+                            <p>Manage postpaid account</p>
+                        </div>
+                        <div class="menu-arrow">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 18l6-6-6-6"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="menu-card" onclick="selectOption('3')">
+                        <div class="menu-icon status">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M12 6v6l4 2"/>
+                            </svg>
+                        </div>
+                        <div class="menu-content">
+                            <h3>Charge Status</h3>
+                            <p>Check transaction status</p>
+                        </div>
+                        <div class="menu-arrow">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 18l6-6-6-6"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Screen -->
+            <div class="screen" id="formScreen">
+                <div class="form-container">
+                    <div class="form-step" id="currentStep"></div>
+                    <div class="form-content" id="formContent"></div>
+                </div>
+            </div>
+
+            <!-- Result Screen -->
+            <div class="screen" id="resultScreen">
+                <div class="result-container" id="resultContainer"></div>
+            </div>
+        </main>
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="spinner"></div>
+            <p>Processing...</p>
+        </div>
+
+        <!-- Toast Notification -->
+        <div class="toast" id="toast"></div>
+    </div>
+
+    <script src="/mobile/app.js"></script>
+</body>
+</html>
+

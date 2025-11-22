@@ -3,15 +3,29 @@
  */
 
 const express = require('express');
+const http = require('http');
+const path = require('path');
+const { Server } = require('socket.io');
 const webhookRoutes = require('./routes/webhook');
+const webRoutes = require('./routes/web');
 require('dotenv').config();
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
+});
 const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
+// Serve static files from public directory
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -29,6 +43,18 @@ app.get('/health', (req, res) => {
 
 // Webhook routes
 app.use('/webhook', webhookRoutes);
+
+// Web API routes
+app.use('/api/web', webRoutes);
+
+// Web interface routes
+app.get('/web', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'web', 'index.html'));
+});
+
+app.get('/mobile', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'mobile', 'index.html'));
+});
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -55,11 +81,30 @@ app.use((req, res) => {
     res.status(404).json({ error: 'Not found' });
 });
 
+// Socket.IO connection handling
+io.on('connection', (socket) => {
+    console.log(`Client connected: ${socket.id}`);
+    
+    socket.on('join-session', (sessionId) => {
+        socket.join(`session-${sessionId}`);
+        console.log(`Client ${socket.id} joined session ${sessionId}`);
+    });
+    
+    socket.on('disconnect', () => {
+        console.log(`Client disconnected: ${socket.id}`);
+    });
+});
+
+// Make io available to routes
+app.set('io', io);
+
 // Start server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`🚀 WhatsApp Bot server is running on port ${PORT}`);
     console.log(`📱 Webhook endpoint: http://localhost:${PORT}/webhook/whatsapp`);
     console.log(`💚 Health check: http://localhost:${PORT}/health`);
+    console.log(`🌐 Web interface: http://localhost:${PORT}/web`);
+    console.log(`📲 Mobile interface: http://localhost:${PORT}/mobile`);
     
     // Validate environment variables
     const requiredEnvVars = [
@@ -70,11 +115,23 @@ app.listen(PORT, () => {
         'DATABASE_URL'
     ];
     
+    const optionalEnvVars = [
+        'WEB_BASE_URL'
+    ];
+    
     const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
     if (missingVars.length > 0) {
-        console.warn('⚠️  Warning: Missing environment variables:', missingVars.join(', '));
+        console.warn('⚠️  Warning: Missing required environment variables:', missingVars.join(', '));
     } else {
         console.log('✅ All required environment variables are set');
+    }
+    
+    // Check optional variables
+    if (!process.env.WEB_BASE_URL) {
+        console.warn('⚠️  Warning: WEB_BASE_URL not set. Using default: http://localhost:3000');
+        console.warn('   Set WEB_BASE_URL in .env to your deployed URL (e.g., https://yourdomain.com)');
+    } else {
+        console.log(`✅ WEB_BASE_URL set to: ${process.env.WEB_BASE_URL}`);
     }
 });
 
@@ -93,5 +150,5 @@ process.on('SIGINT', async () => {
     process.exit(0);
 });
 
-module.exports = app;
+module.exports = { app, server, io };
 
