@@ -36,11 +36,26 @@ class ConversationService {
             // Get or create session
             const session = await dbService.getOrCreateSession(phoneNumber);
             
-            // Handle menu reset commands
+            // Handle cancel commands - create new session
             const upperMessage = message.trim().toUpperCase();
+            const cancelKeywords = ['CANCEL', 'STOP', 'END', 'QUIT', 'EXIT', 'ABORT'];
+            if (cancelKeywords.includes(upperMessage)) {
+                // Delete old session and create a fresh one
+                await dbService.deleteSession(session.id);
+                const newSession = await dbService.getOrCreateSession(phoneNumber);
+                return MessageFormatter.formatCancellationWithMenu(newSession.id);
+            }
+            
+            // Handle menu reset commands
             if (upperMessage === 'MENU' || upperMessage === 'RESET') {
-                await dbService.resetSession(session.id);
-                return MessageFormatter.formatMenu();
+                const resetSession = await dbService.resetSession(session.id);
+                if (resetSession) {
+                    return MessageFormatter.formatMenu(resetSession.id);
+                } else {
+                    // Session was deleted, create new one
+                    const newSession = await dbService.getOrCreateSession(phoneNumber);
+                    return MessageFormatter.formatMenu(newSession.id);
+                }
             }
 
             // Route based on current state
@@ -62,8 +77,14 @@ class ConversationService {
                     return await this.handleChargeConfirmation(session, message);
                 
                 default:
-                    await dbService.resetSession(session.id);
-                    return MessageFormatter.formatMenu();
+                    const resetSession = await dbService.resetSession(session.id);
+                    if (resetSession) {
+                        return MessageFormatter.formatMenu(resetSession.id);
+                    } else {
+                        // Session was deleted, create new one
+                        const newSession = await dbService.getOrCreateSession(phoneNumber);
+                        return MessageFormatter.formatMenu(newSession.id);
+                    }
             }
         } catch (error) {
             console.error('Error processing message:', error);
@@ -124,8 +145,12 @@ This feature is coming soon. Please select another option:
 1️⃣ Prepaid
 2️⃣ Postpaid`;
             
+            case '4':
+                // Open Web Version - return menu with clickable URL
+                return MessageFormatter.formatMenu(session.id);
+            
             default:
-                return MessageFormatter.formatMenu();
+                return MessageFormatter.formatMenu(session.id);
         }
     }
 
@@ -137,11 +162,21 @@ This feature is coming soon. Please select another option:
      * @returns {Promise<string>} - Response message
      */
     async handleMeterInfoCollection(session, message, type) {
+        const upperMessage = message.trim().toUpperCase();
+        
+        // Check for cancel keywords
+        const cancelKeywords = ['CANCEL', 'STOP', 'END', 'QUIT', 'EXIT', 'ABORT'];
+        if (cancelKeywords.includes(upperMessage)) {
+            await dbService.deleteSession(session.id);
+            const newSession = await dbService.getOrCreateSession(session.phoneNumber);
+            return MessageFormatter.formatCancellationWithMenu(newSession.id);
+        }
+        
         const sessionData = session.sessionData || {};
         let currentFieldIndex = sessionData.currentFieldIndex || 0;
         
         // Handle SKIP for optional fields
-        if (message.trim().toUpperCase() === 'SKIP' && !ConversationService.METER_INFO_FIELDS[currentFieldIndex].required) {
+        if (upperMessage === 'SKIP' && !ConversationService.METER_INFO_FIELDS[currentFieldIndex].required) {
             currentFieldIndex++;
         } else {
             // Store the field value
@@ -214,7 +249,11 @@ This feature is coming soon. Please select another option:
                     machineSignature: sessionData.machineSignature
                 });
             } catch (error) {
-                await dbService.resetSession(sessionId);
+                // Check if session still exists before resetting
+                const session = await dbService.getSessionById(sessionId);
+                if (session) {
+                    await dbService.resetSession(sessionId);
+                }
                 
                 if (error.type === 'timeout') {
                     await twilioService.sendMessage(phoneNumber, MessageFormatter.formatTimeoutError());
@@ -227,7 +266,11 @@ This feature is coming soon. Please select another option:
             }
 
             if (!meterInfoResponse || !meterInfoResponse.payLoad) {
-                await dbService.resetSession(sessionId);
+                // Check if session still exists before resetting
+                const session = await dbService.getSessionById(sessionId);
+                if (session) {
+                    await dbService.resetSession(sessionId);
+                }
                 await twilioService.sendMessage(phoneNumber, MessageFormatter.formatError('Failed to retrieve meter information. Please check your details and try again.'));
                 return;
             }
@@ -255,7 +298,11 @@ This feature is coming soon. Please select another option:
                     machineSignature: sessionData.machineSignature
                 });
             } catch (error) {
-                await dbService.resetSession(sessionId);
+                // Check if session still exists before resetting
+                const session = await dbService.getSessionById(sessionId);
+                if (session) {
+                    await dbService.resetSession(sessionId);
+                }
                 
                 if (error.type === 'timeout') {
                     await twilioService.sendMessage(phoneNumber, MessageFormatter.formatTimeoutError());
@@ -268,7 +315,11 @@ This feature is coming soon. Please select another option:
             }
 
             if (!enquiryResponse || !enquiryResponse.data || enquiryResponse.data.length === 0) {
-                await dbService.resetSession(sessionId);
+                // Check if session still exists before resetting
+                const session = await dbService.getSessionById(sessionId);
+                if (session) {
+                    await dbService.resetSession(sessionId);
+                }
                 await twilioService.sendMessage(phoneNumber, MessageFormatter.formatError('Failed to retrieve account enquiry. Please try again.'));
                 return;
             }
@@ -281,8 +332,15 @@ This feature is coming soon. Please select another option:
             await twilioService.sendMessage(phoneNumber, MessageFormatter.formatEnquiryResponse(enquiryResponse));
         } catch (error) {
             console.error('Error processing enquiry async:', error);
-            await dbService.resetSession(sessionId);
-            await twilioService.sendMessage(phoneNumber, MessageFormatter.formatError('An error occurred while processing your request. Please try again.'));
+            // Check if session still exists before resetting
+            const session = await dbService.getSessionById(sessionId);
+            if (session) {
+                await dbService.resetSession(sessionId);
+            }
+            // Only send error message if session exists (user might have cancelled)
+            if (session) {
+                await twilioService.sendMessage(phoneNumber, MessageFormatter.formatError('An error occurred while processing your request. Please try again.'));
+            }
         }
     }
 
@@ -293,6 +351,16 @@ This feature is coming soon. Please select another option:
      * @returns {Promise<string>} - Response message
      */
     async handleEnquiryProcessing(session, message) {
+        const upperMessage = message.trim().toUpperCase();
+        
+        // Check for cancel keywords
+        const cancelKeywords = ['CANCEL', 'STOP', 'END', 'QUIT', 'EXIT', 'ABORT'];
+        if (cancelKeywords.includes(upperMessage)) {
+            await dbService.deleteSession(session.id);
+            const newSession = await dbService.getOrCreateSession(session.phoneNumber);
+            return MessageFormatter.formatCancellationWithMenu(newSession.id);
+        }
+        
         // If we're in enquiry processing, wait for it to complete
         // This is a fallback in case user sends a message while processing
         return MessageFormatter.formatProcessing('Your request is still being processed');
@@ -307,11 +375,19 @@ This feature is coming soon. Please select another option:
     async handleChargeConfirmation(session, message) {
         const upperMessage = message.trim().toUpperCase();
         
+        // Check for cancel keywords first
+        const cancelKeywords = ['CANCEL', 'STOP', 'END', 'QUIT', 'EXIT', 'ABORT'];
+        if (cancelKeywords.includes(upperMessage)) {
+            await dbService.deleteSession(session.id);
+            const newSession = await dbService.getOrCreateSession(session.phoneNumber);
+            return MessageFormatter.formatCancellationWithMenu(newSession.id);
+        }
+        
         if (upperMessage === 'YES' || upperMessage === 'Y' || upperMessage === 'CONFIRM') {
             // Charge endpoint will be implemented later
             await dbService.resetSession(session.id);
             return MessageFormatter.formatSuccess('Your charge request has been received. The charge endpoint will be implemented soon.');
-        } else if (upperMessage === 'NO' || upperMessage === 'N' || upperMessage === 'CANCEL') {
+        } else if (upperMessage === 'NO' || upperMessage === 'N') {
             await dbService.resetSession(session.id);
             return MessageFormatter.formatCancellation();
         } else {

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>ECG Credit Purchase - Web Chat</title>
+    <link rel="stylesheet" href="/web/style.css">
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <div class="chat-container">
+        <!-- Header -->
+        <div class="chat-header">
+            <div class="header-content">
+                <div class="header-avatar">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+                    </svg>
+                </div>
+                <div class="header-info">
+                    <h2>ECG Credit Purchase</h2>
+                    <p class="status">Online</p>
+                </div>
+                <button class="switch-btn" onclick="switchToMobile()" title="Switch to Mobile App">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                        <line x1="12" y1="18" x2="12.01" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Messages Area -->
+        <div class="messages-container" id="messagesContainer">
+            <div class="message bot-message">
+                <div class="message-content">
+                    <p>Welcome! Please wait while we load your session...</p>
+                </div>
+                <span class="message-time">Just now</span>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="input-container">
+            <div class="input-wrapper">
+                <button class="menu-btn" onclick="showMenu()" title="Show Menu">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="12" x2="21" y2="12"/>
+                        <line x1="3" y1="6" x2="21" y2="6"/>
+                        <line x1="3" y1="18" x2="21" y2="18"/>
+                    </svg>
+                </button>
+                <input 
+                    type="text" 
+                    id="messageInput" 
+                    placeholder="Type a message..."
+                    autocomplete="off"
+                    onkeypress="handleKeyPress(event)"
+                >
+                <button class="send-btn" onclick="sendMessage()" title="Send">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="22" y1="2" x2="11" y2="13"/>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/web/app.js"></script>
+</body>
+</html>
+
