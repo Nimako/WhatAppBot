@@ -28,7 +28,7 @@ async function loadSession() {
                 // Use current origin for web interface (client-side)
                 const baseUrl = window.location.origin;
                 const webUrl = `${baseUrl}/web?session=${sessionId}`;
-                addMessage('bot', `*ECG Credit Purchase Bot*\n\nPlease select an option:\n1️⃣ Prepaid\n2️⃣ Postpaid\n3️⃣ Charge Status\n4️⃣ Open Web Version : ${webUrl}\n\nReply with the number of your choice.\n\n*Tip:* Type *CANCEL*, *STOP*, *END*, or *QUIT* at any time to cancel and start over.`);
+                addMessage('bot', `*ECG Credit Purchase Bot*\n\nPlease select an option:\n1️⃣ Prepaid\n2️⃣ Postpaid\n3️⃣ Charge Status\n4️⃣ By from Web : ${webUrl}\n\nReply with the number of your choice.\n\n*Tip:* Type  *STOP*,  or *CANCEL* at any time to cancel and start over.`);
             }
         }
         return true;
@@ -150,11 +150,8 @@ async function sendMessage() {
         loadingDiv.remove();
         
         if (data.success) {
-            // Message will be received via WebSocket
-            // But add it here as fallback
-            if (data.message) {
-                addMessage('bot', data.message);
-            }
+            // Message will be received via WebSocket, so don't add it here to avoid duplicates
+            // WebSocket is the primary method for real-time updates
         } else {
             addMessage('bot', `Error: ${data.error || 'Failed to send message'}`);
         }
@@ -184,8 +181,9 @@ async function showMenu() {
         });
         
         const data = await response.json();
-        if (data.success && data.message) {
-            addMessage('bot', data.message);
+        // Menu message will be received via WebSocket, so don't add it here to avoid duplicates
+        if (!data.success) {
+            addMessage('bot', 'Error loading menu. Please try again.');
         }
     } catch (error) {
         console.error('Error showing menu:', error);
