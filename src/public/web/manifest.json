@@ -1,0 +1,27 @@
+{
+  "name": "ECG Credit Purchase - Chat",
+  "short_name": "TGL Chat",
+  "description": "WhatsApp-style chat interface for ECG credit purchases",
+  "start_url": "/web?session=",
+  "scope": "/web",
+  "display": "standalone",
+  "background_color": "#075e54",
+  "theme_color": "#25d366",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/web/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/web/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["finance", "utilities"]
+}
+

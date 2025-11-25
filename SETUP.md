@@ -37,6 +37,9 @@
    TWILIO_WHATSAPP_NUMBER=whatsapp:+14155238886
    BACKEND_BASE_URL=https://webvendingtest.tglvendors.com:89
    WEB_BASE_URL=https://your-domain.com
+   SIGNATURE_SOCKET_URL=ws://127.0.0.1:7573
+   SIGNATURE_VENDOR_ID=1
+   SIGNATURE_METHOD=33
    DATABASE_URL=postgresql://username:password@localhost:5432/whatsapp_bot
    PORT=3000
    ```
@@ -44,6 +47,7 @@
    **Note:** 
    - `BACKEND_BASE_URL` is for the ECG backend API
    - `WEB_BASE_URL` is for the web interface URL (used in WhatsApp menu links). 
+   - `SIGNATURE_SOCKET_URL`, `SIGNATURE_VENDOR_ID`, `SIGNATURE_METHOD` are for machine signature generation.
    - For local development, `WEB_BASE_URL` defaults to `http://localhost:3000`
    - For production, set `WEB_BASE_URL` to your deployed domain (e.g., `https://yourdomain.com`)
 
