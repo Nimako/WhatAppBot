@@ -56,6 +56,47 @@ app.get('/mobile', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'mobile', 'index.html'));
 });
 
+// Serve manifest files with correct content type
+app.get('/web/manifest.json', (req, res) => {
+    res.setHeader('Content-Type', 'application/manifest+json');
+    res.sendFile(path.join(__dirname, 'public', 'web', 'manifest.json'));
+});
+
+app.get('/mobile/manifest.json', (req, res) => {
+    res.setHeader('Content-Type', 'application/manifest+json');
+    res.sendFile(path.join(__dirname, 'public', 'mobile', 'manifest.json'));
+});
+
+// Serve service workers with correct content type and headers
+app.get('/web/sw.js', (req, res) => {
+    res.setHeader('Content-Type', 'application/javascript');
+    res.setHeader('Service-Worker-Allowed', '/');
+    res.sendFile(path.join(__dirname, 'public', 'web', 'sw.js'));
+});
+
+app.get('/mobile/sw.js', (req, res) => {
+    res.setHeader('Content-Type', 'application/javascript');
+    res.setHeader('Service-Worker-Allowed', '/');
+    res.sendFile(path.join(__dirname, 'public', 'mobile', 'sw.js'));
+});
+
+// Handle missing icon files gracefully (return 204 No Content)
+app.get('/web/icon-192.png', (req, res) => {
+    res.status(204).send();
+});
+
+app.get('/web/icon-512.png', (req, res) => {
+    res.status(204).send();
+});
+
+app.get('/mobile/icon-192.png', (req, res) => {
+    res.status(204).send();
+});
+
+app.get('/mobile/icon-512.png', (req, res) => {
+    res.status(204).send();
+});
+
 // Root endpoint
 app.get('/', (req, res) => {
     res.status(200).json({ 

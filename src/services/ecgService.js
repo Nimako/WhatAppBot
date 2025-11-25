@@ -3,6 +3,7 @@
  */
 
 const axios = require('axios');
+const signatureService = require('./signatureService');
 require('dotenv').config();
 
 class ECGService {
@@ -46,7 +47,7 @@ class ECGService {
      * @returns {Promise<object>} - Meter info response
      * @throws {Error} - Throws error with type 'timeout', 'connection', or 'api' for proper handling
      */
-    async getMeterInfo({ phoneNumber, meterNumber, accountNumber, meterType, machineSignature }) {
+    async   ({ phoneNumber, meterNumber, accountNumber, meterType, machineSignature }) {
         this._ensureBaseUrl();
         try {
             const model = {
@@ -136,13 +137,23 @@ class ECGService {
     async enquiry({ asyncRequestId, referenceId, meterSerial, mobileNumber, meterType, machineSignature }) {
         this._ensureBaseUrl();
         try {
+            // Generate machine signature if not provided
+            let signature = machineSignature;
+            if (!signature) {
+                try {
+                    signature = await signatureService.getMachineSignature();
+                } catch (sigError) {
+                    console.error('Failed to generate machine signature:', sigError.message);
+                }
+            }
+
             const model = {
                 asyncRequestId: asyncRequestId || '',
                 referenceId: referenceId || '',
                 meterSerial: meterSerial || '',
                 mobileNumber: mobileNumber || '',
                 meterType: meterType || '',
-                machineSignature: machineSignature || ''
+                machineSignature: signature || ''
             };
 
             const response = await axios.post(
