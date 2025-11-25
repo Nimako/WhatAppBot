@@ -2,6 +2,7 @@
  * Conversation Service - Manages conversation flow and state machine
  */
 
+const { v4: uuidv4 } = require('uuid');
 const dbService = require('./dbService');
 const ecgService = require('./ecgService');
 const twilioService = require('./twilioService');
@@ -141,9 +142,9 @@ class ConversationService {
                 // Charge Status (to be implemented)
                 return `*Charge Status*
 
-This feature is coming soon. Please select another option:
-1️⃣ Prepaid
-2️⃣ Postpaid`;
+                This feature is coming soon. Please select another option:
+                1️⃣ Prepaid
+                2️⃣ Postpaid`;
             
             case '4':
                 // Open Web Version - return menu with clickable URL
@@ -189,6 +190,12 @@ This feature is coming soon. Please select another option:
         if (currentFieldIndex >= ConversationService.METER_INFO_FIELDS.length) {
             // All fields collected, proceed to API calls
             sessionData.currentFieldIndex = currentFieldIndex;
+            
+            // Generate new asyncRequestId for this enquiry/purchase process
+            // This ID will be used throughout: enquiry, payment, charge, and status check
+            sessionData.asyncRequestId = uuidv4();
+            console.log('Generated new asyncRequestId:', sessionData.asyncRequestId);
+            
             await dbService.updateSession(session.id, 
                 type === 'PREPAID' ? ConversationService.STATES.PREPAID_ENQUIRY : ConversationService.STATES.POSTPAID_ENQUIRY,
                 sessionData
@@ -284,17 +291,19 @@ This feature is coming soon. Please select another option:
             await twilioService.sendMessage(phoneNumber, MessageFormatter.formatProcessing('Processing account enquiry'));
             
             // Call Enquiry API
-            // Use meterType from payload if available, otherwise use the one we set from menu selection
-            const enquiryMeterType = payload.meterType || meterType;
             
             let enquiryResponse;
             try {
+                // Use the asyncRequestId generated at the start of this enquiry process
+                // This same ID will be used for payment, charge, and status check endpoints
+                console.log('Using asyncRequestId for enquiry:', sessionData.asyncRequestId);
+                
                 enquiryResponse = await ecgService.enquiry({
-                    asyncRequestId: payload.meterId || '',
-                    referenceId: payload.meterNumber || '',
+                    asyncRequestId: sessionData.asyncRequestId,
+                    referenceId: payload.meterId || '',
                     meterSerial: payload.meterNumber || '',
                     mobileNumber: sessionData.phoneNumber,
-                    meterType: enquiryMeterType,
+                    meterType: payload.meterType,
                     machineSignature: sessionData.machineSignature
                 });
             } catch (error) {

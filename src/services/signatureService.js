@@ -8,7 +8,7 @@ require('dotenv').config();
 class SignatureService {
     constructor() {
         this.socketUrl = process.env.SIGNATURE_SOCKET_URL || 'ws://127.0.0.1:7573';
-        this.vendorId = process.env.SIGNATURE_VENDOR_ID ? parseInt(process.env.SIGNATURE_VENDOR_ID) : 1;
+        this.vendorId = process.env.SIGNATURE_VENDOR_ID ? parseInt(process.env.SIGNATURE_VENDOR_ID) : 2328;
         this.method = process.env.SIGNATURE_METHOD ? parseInt(process.env.SIGNATURE_METHOD) : 33;
     }
 
