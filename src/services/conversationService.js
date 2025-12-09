@@ -243,6 +243,7 @@ class ConversationService {
             const meterType = sessionData.meterType || (type === 'PREPAID' ? 'Prepaid' : 'Postpaid');
             
             // Send message: Retrieving meter information
+            console.log(`Sending "Retrieving meter information" to ${phoneNumber}`);
             await twilioService.sendMessage(phoneNumber, MessageFormatter.formatProcessing('Retrieving meter information'));
             
             // Call MeterInfo API
@@ -288,6 +289,7 @@ class ConversationService {
             sessionData.meterInfo = meterInfoResponse;
             
             // Send message: Processing account enquiry
+            console.log(`Sending "Processing account enquiry" to ${phoneNumber}`);
             await twilioService.sendMessage(phoneNumber, MessageFormatter.formatProcessing('Processing account enquiry'));
             
             // Call Enquiry API
@@ -338,7 +340,14 @@ class ConversationService {
             await dbService.updateSession(sessionId, ConversationService.STATES.CONFIRM_CHARGE, sessionData);
 
             // Send enquiry response
-            await twilioService.sendMessage(phoneNumber, MessageFormatter.formatEnquiryResponse(enquiryResponse));
+            const enquiryMessage = MessageFormatter.formatEnquiryResponse(enquiryResponse);
+            console.log(`Sending enquiry response to ${phoneNumber}`);
+            const sendResult = await twilioService.sendMessage(phoneNumber, enquiryMessage);
+            if (sendResult) {
+                console.log(`Enquiry response sent successfully to ${phoneNumber}`);
+            } else {
+                console.error(`Failed to send enquiry response to ${phoneNumber}`);
+            }
         } catch (error) {
             console.error('Error processing enquiry async:', error);
             // Check if session still exists before resetting
@@ -370,7 +379,18 @@ class ConversationService {
             return MessageFormatter.formatCancellationWithMenu(newSession.id);
         }
         
-        // If we're in enquiry processing, wait for it to complete
+        // Check if enquiry has completed - if session state changed to CONFIRM_CHARGE, 
+        // it means enquiry completed successfully
+        const currentSession = await dbService.getSessionById(session.id);
+        if (currentSession && currentSession.currentState === ConversationService.STATES.CONFIRM_CHARGE) {
+            // Enquiry completed, return the enquiry response
+            const sessionData = currentSession.sessionData || {};
+            if (sessionData.enquiryResponse) {
+                return MessageFormatter.formatEnquiryResponse(sessionData.enquiryResponse);
+            }
+        }
+        
+        // If we're still in enquiry processing, wait for it to complete
         // This is a fallback in case user sends a message while processing
         return MessageFormatter.formatProcessing('Your request is still being processed');
     }

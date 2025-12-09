@@ -102,7 +102,8 @@ app.get('/', (req, res) => {
     res.status(200).json({ 
         message: 'WhatsApp Bot API is running',
         endpoints: {
-            webhook: '/webhook/whatsapp',
+            twilioWebhook: '/webhook/whatsapp',
+            wasenderWebhook: '/webhook/wasender',
             health: '/health'
         }
     });
@@ -142,7 +143,8 @@ app.set('io', io);
 // Start server
 server.listen(PORT, () => {
     console.log(`🚀 WhatsApp Bot server is running on port ${PORT}`);
-    console.log(`📱 Webhook endpoint: http://localhost:${PORT}/webhook/whatsapp`);
+    console.log(`📱 Twilio webhook: http://localhost:${PORT}/webhook/whatsapp`);
+    console.log(`📱 Wasender webhook: http://localhost:${PORT}/webhook/wasender`);
     console.log(`💚 Health check: http://localhost:${PORT}/health`);
     console.log(`🌐 Web interface: http://localhost:${PORT}/web`);
     console.log(`📲 Mobile interface: http://localhost:${PORT}/mobile`);
@@ -157,7 +159,8 @@ server.listen(PORT, () => {
     ];
     
     const optionalEnvVars = [
-        'WEB_BASE_URL'
+        'WEB_BASE_URL',
+        'WASENDER_API_KEY'
     ];
     
     const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
@@ -173,6 +176,13 @@ server.listen(PORT, () => {
         console.warn('   Set WEB_BASE_URL in .env to your deployed URL (e.g., https://yourdomain.com)');
     } else {
         console.log(`✅ WEB_BASE_URL set to: ${process.env.WEB_BASE_URL}`);
+    }
+    
+    if (!process.env.WASENDER_API_KEY) {
+        console.warn('⚠️  Warning: WASENDER_API_KEY not set. Fallback messaging will not work.');
+        console.warn('   Set WASENDER_API_KEY in .env to enable Wasender API fallback');
+    } else {
+        console.log(`✅ WASENDER_API_KEY is configured (fallback enabled)`);
     }
 });
 

@@ -66,5 +66,91 @@ router.get('/whatsapp', (req, res) => {
     res.status(200).send('WhatsApp webhook is active');
 });
 
+/**
+ * POST /webhook/wasender
+ * Wasender API webhook endpoint for incoming WhatsApp messages
+ */
+router.post('/wasender', async (req, res) => {
+    try {
+        // Extract message data from Wasender webhook format
+        const event = req.body.event;
+        
+        // Only process messages.received events
+        if (event !== 'messages.received') {
+            return res.status(200).json({ 
+                success: true, 
+                message: 'Event type not processed' 
+            });
+        }
+
+        const data = req.body.data;
+        if (!data || !data.messages) {
+            return res.status(400).json({ 
+                error: 'Invalid webhook data structure' 
+            });
+        }
+
+        const messageData = data.messages;
+        const messageBody = messageData.messageBody || 
+                           (messageData.message?.extendedTextMessage?.text) || 
+                           '';
+        const remoteJid = messageData.remoteJid || messageData.key?.remoteJid || '';
+        
+        // Extract phone number from remoteJid (format: 233244274699@s.whatsapp.net)
+        // or use cleanedSenderPn if available
+        let phoneNumber = '';
+        if (messageData.key?.cleanedSenderPn) {
+            phoneNumber = `whatsapp:+${messageData.key.cleanedSenderPn}`;
+        } else if (remoteJid) {
+            // Extract number from format like "233244274699@s.whatsapp.net"
+            const match = remoteJid.match(/^(\d+)@/);
+            if (match) {
+                phoneNumber = `whatsapp:+${match[1]}`;
+            }
+        }
+
+        if (!phoneNumber) {
+            console.error('Could not extract phone number from webhook:', req.body);
+            return res.status(400).json({ 
+                error: 'Could not extract phone number' 
+            });
+        }
+
+        console.log(`Received Wasender webhook message from ${phoneNumber}: ${messageBody}`);
+
+        // Process message through conversation service
+        const responseMessage = await conversationService.processMessage(phoneNumber, messageBody);
+
+        // Send response via Wasender API (async, don't wait)
+        const wasenderService = require('../services/wasenderService');
+        wasenderService.sendMessage(phoneNumber, responseMessage).catch(err => {
+            console.error('Error sending response via Wasender:', err);
+        });
+
+        // Return success response to webhook
+        res.status(200).json({ 
+            success: true, 
+            message: 'Message processed' 
+        });
+    } catch (error) {
+        console.error('Error in Wasender webhook:', error);
+        res.status(500).json({ 
+            error: 'Internal server error',
+            message: error.message 
+        });
+    }
+});
+
+/**
+ * GET /webhook/wasender
+ * Wasender webhook verification (for webhook setup)
+ */
+router.get('/wasender', (req, res) => {
+    res.status(200).json({ 
+        success: true, 
+        message: 'Wasender webhook is active' 
+    });
+});
+
 module.exports = router;
 

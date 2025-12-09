@@ -73,12 +73,12 @@ Type *MENU* to return to the main menu.`;
         if (datum.meterType) {
             message += `🔌 *Meter Type:* ${datum.meterType}\n`;
         }
-        if (datum.meterCategory) {
-            message += `📋 *Category:* ${datum.meterCategory}\n`;
-        }
-        if (datum.region) {
-            message += `🌍 *Region:* ${datum.region}\n`;
-        }
+        // if (datum.meterCategory) {
+        //     message += `📋 *Category:* ${datum.meterCategory}\n`;
+        // }
+        // if (datum.region) {
+        //     message += `🌍 *Region:* ${datum.region}\n`;
+        // }
         if (datum.district) {
             message += `🏘️ *District:* ${datum.district}\n`;
         }
